@@ -136,6 +136,12 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
+      .button.secondary.dark {
+        background: #f0f4ff;
+        color: var(--navy);
+        border-color: #d9e6ff;
+      }
+
       .hero-card {
         background: rgba(255, 255, 255, 0.08);
         padding: 28px;
@@ -258,6 +264,24 @@
         font-size: 0.95rem;
       }
 
+      .blueprint-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .blueprint-output {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 14px;
+        background: #f3f6ff;
+        border: 1px dashed #c8d6ff;
+        color: #2b3a55;
+        font-size: 0.92rem;
+        display: none;
+      }
+
       .library-tag {
         display: inline-flex;
         align-items: center;
@@ -290,6 +314,59 @@
         display: block;
         color: var(--slate);
         font-size: 0.9rem;
+      }
+
+      .data-board {
+        display: grid;
+        gap: 16px;
+      }
+
+      .data-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 1px solid #e0e7f7;
+        background: #f9fbff;
+        font-size: 0.92rem;
+      }
+
+      .data-row strong {
+        color: var(--navy);
+      }
+
+      .data-row span {
+        color: var(--slate);
+      }
+
+      .status-pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #e6f8f1;
+        color: #198e66;
+      }
+
+      .toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        background: #0b1b2f;
+        color: white;
+        padding: 12px 18px;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(12px);
+        transition: all 0.25s ease;
+        z-index: 10;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .footer {
@@ -393,6 +470,7 @@
               </div>
               <button class="button primary" type="submit">Generate bot blueprint</button>
             </form>
+            <div class="blueprint-output" id="blueprintOutput"></div>
           </div>
 
           <div class="preview">
@@ -405,6 +483,10 @@
               <li><strong>Protections:</strong> Daily loss 3%, Max drawdown 8%</li>
               <li><strong>Execution:</strong> Smart limit + volatility filter + news lockout</li>
             </ul>
+            <div class="blueprint-actions">
+              <button class="button secondary dark" type="button" id="copyBlueprint">Copy blueprint</button>
+              <button class="button secondary dark" type="button" id="downloadBlueprint">Download JSON</button>
+            </div>
           </div>
         </div>
       </section>
@@ -420,16 +502,31 @@
             <h3>Macro snapshot</h3>
             <p>Real-time rates, central bank policy bias, and cross-asset correlation monitoring.</p>
             <p class="library-tag" style="margin-top: 12px;">Fed · ECB · BoE · BOJ</p>
+            <div class="data-board" style="margin-top: 16px;">
+              <div class="data-row"><strong>EUR/USD</strong><span>1.0826</span><span class="status-pill">Trend +0.42%</span></div>
+              <div class="data-row"><strong>GBP/USD</strong><span>1.2714</span><span class="status-pill">Trend +0.18%</span></div>
+              <div class="data-row"><strong>USD/JPY</strong><span>147.82</span><span class="status-pill">Trend +0.09%</span></div>
+            </div>
           </div>
           <div class="card">
             <h3>Market structure</h3>
             <p>Order flow imbalance, liquidity sweeps, and session volatility modeling.</p>
             <p class="library-tag" style="margin-top: 12px;">Liquidity map · VWAP</p>
+            <div class="data-board" style="margin-top: 16px;">
+              <div class="data-row"><strong>London</strong><span>Liquidity build</span><span>08:00 - 11:00 GMT</span></div>
+              <div class="data-row"><strong>New York</strong><span>Momentum bias</span><span>13:00 - 16:00 GMT</span></div>
+              <div class="data-row"><strong>Asia</strong><span>Range mode</span><span>23:00 - 02:00 GMT</span></div>
+            </div>
           </div>
           <div class="card">
             <h3>Risk engine</h3>
             <p>Dynamic stop placement, VaR thresholds, and trade throttling during news.</p>
             <p class="library-tag" style="margin-top: 12px;">VaR · Drawdown guard</p>
+            <div class="data-board" style="margin-top: 16px;">
+              <div class="data-row"><strong>Portfolio VaR</strong><span>1.6%</span><span>Below limit</span></div>
+              <div class="data-row"><strong>Max DD</strong><span>4.2%</span><span>Healthy</span></div>
+              <div class="data-row"><strong>News Lockout</strong><span>3 events</span><span>Active</span></div>
+            </div>
           </div>
         </div>
       </section>
@@ -440,28 +537,28 @@
           Choose a pre-built bot, then customize it with your own capital rules and market filters.
         </p>
         <div class="bot-library" style="margin-top: 28px;">
-          <div class="bot-option">
+          <div class="bot-option" data-strategy="London Open Momentum" data-timeframe="M15" data-risk="1.25" data-pairs="GBP/USD, EUR/GBP, EUR/USD" data-limits="Daily loss limit 2.5%, Max drawdown 6%">
             <div>
               <strong>London Open Momentum</strong>
               <span>Trades first 90 minutes of London with volatility expansion rules.</span>
             </div>
             <button class="button secondary" type="button">Use this bot</button>
           </div>
-          <div class="bot-option">
+          <div class="bot-option" data-strategy="NY Session Mean Reversion" data-timeframe="M15" data-risk="1" data-pairs="EUR/USD, USD/CHF" data-limits="Daily loss limit 2%, Max drawdown 5%">
             <div>
               <strong>NY Session Mean Reversion</strong>
               <span>Targets U.S. session pullbacks with liquidity sweep confirmation.</span>
             </div>
             <button class="button secondary" type="button">Use this bot</button>
           </div>
-          <div class="bot-option">
+          <div class="bot-option" data-strategy="Carry Trade Portfolio" data-timeframe="D1" data-risk="0.75" data-pairs="AUD/JPY, NZD/JPY, USD/MXN" data-limits="Weekly loss limit 3%, Max drawdown 7%">
             <div>
               <strong>Carry Trade Portfolio</strong>
               <span>Multi-pair swaps optimized for positive carry and trend strength.</span>
             </div>
             <button class="button secondary" type="button">Use this bot</button>
           </div>
-          <div class="bot-option">
+          <div class="bot-option" data-strategy="Breakout + Fundamental Filter" data-timeframe="H1" data-risk="1.5" data-pairs="EUR/USD, GBP/USD, USD/JPY" data-limits="Daily loss limit 3%, Max drawdown 8%">
             <div>
               <strong>Breakout + Fundamental Filter</strong>
               <span>Combines EMA breakouts with macro bias and news restrictions.</span>
@@ -493,32 +590,65 @@
         <span>Disclaimer: Trading involves risk. Past performance does not guarantee future results.</span>
       </div>
     </main>
+    <div class="toast" id="toast">Blueprint copied to clipboard.</div>
 
     <script>
       const riskInput = document.getElementById("risk");
       const riskValue = document.getElementById("riskValue");
       const previewList = document.getElementById("previewList");
       const form = document.getElementById("botForm");
+      const blueprintOutput = document.getElementById("blueprintOutput");
+      const copyBlueprint = document.getElementById("copyBlueprint");
+      const downloadBlueprint = document.getElementById("downloadBlueprint");
+      const toast = document.getElementById("toast");
+
+      const libraryButtons = document.querySelectorAll(".bot-option button");
 
       const updateRisk = () => {
         riskValue.textContent = `${Number(riskInput.value).toFixed(2)}%`;
       };
 
-      const updatePreview = () => {
+      const getBlueprint = () => {
         const strategy = document.getElementById("strategy").value.trim() ||
           "London breakout with EMA confirmation";
         const timeframe = document.getElementById("timeframe").value;
         const pairs = document.getElementById("pairs").value;
         const limits = document.getElementById("limits").value;
+        const risk = Number(riskInput.value).toFixed(2);
+
+        return {
+          strategy,
+          timeframe,
+          pairs: pairs.split(",").map((pair) => pair.trim()).filter(Boolean),
+          riskPerTrade: `${risk}%`,
+          protections: limits,
+          execution: "Smart limit + volatility filter + news lockout",
+          generatedAt: new Date().toISOString()
+        };
+      };
+
+      const updatePreview = () => {
+        const blueprint = getBlueprint();
 
         previewList.innerHTML = `
-          <li><strong>Strategy:</strong> ${strategy}</li>
-          <li><strong>Timeframe:</strong> ${timeframe} execution layer</li>
-          <li><strong>Pairs:</strong> ${pairs}</li>
-          <li><strong>Risk:</strong> ${Number(riskInput.value).toFixed(2)}% per trade</li>
-          <li><strong>Protections:</strong> ${limits}</li>
-          <li><strong>Execution:</strong> Smart limit + volatility filter + news lockout</li>
+          <li><strong>Strategy:</strong> ${blueprint.strategy}</li>
+          <li><strong>Timeframe:</strong> ${blueprint.timeframe} execution layer</li>
+          <li><strong>Pairs:</strong> ${blueprint.pairs.join(", ")}</li>
+          <li><strong>Risk:</strong> ${blueprint.riskPerTrade} per trade</li>
+          <li><strong>Protections:</strong> ${blueprint.protections}</li>
+          <li><strong>Execution:</strong> ${blueprint.execution}</li>
         `;
+      };
+
+      const showBlueprintOutput = (blueprint) => {
+        blueprintOutput.style.display = "block";
+        blueprintOutput.textContent = `Blueprint ready: ${blueprint.strategy} · ${blueprint.timeframe} · ${blueprint.riskPerTrade} risk.`;
+      };
+
+      const showToast = (message) => {
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2200);
       };
 
       riskInput.addEventListener("input", () => {
@@ -526,9 +656,51 @@
         updatePreview();
       });
 
+      ["strategy", "timeframe", "pairs", "limits"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", updatePreview);
+      });
+
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         updatePreview();
+        showBlueprintOutput(getBlueprint());
+      });
+
+      copyBlueprint.addEventListener("click", async () => {
+        const blueprint = getBlueprint();
+        try {
+          await navigator.clipboard.writeText(JSON.stringify(blueprint, null, 2));
+          showToast("Blueprint copied to clipboard.");
+        } catch (error) {
+          showToast("Copy failed. Your browser may block clipboard access.");
+        }
+      });
+
+      downloadBlueprint.addEventListener("click", () => {
+        const blueprint = getBlueprint();
+        const blob = new Blob([JSON.stringify(blueprint, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "forex-bot-blueprint.json";
+        anchor.click();
+        URL.revokeObjectURL(url);
+        showToast("Download started.");
+      });
+
+      libraryButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+          const card = event.currentTarget.closest(".bot-option");
+          document.getElementById("strategy").value = card.dataset.strategy;
+          document.getElementById("timeframe").value = card.dataset.timeframe;
+          document.getElementById("pairs").value = card.dataset.pairs;
+          document.getElementById("limits").value = card.dataset.limits;
+          riskInput.value = card.dataset.risk;
+          updateRisk();
+          updatePreview();
+          showBlueprintOutput(getBlueprint());
+          document.getElementById("builder").scrollIntoView({ behavior: "smooth" });
+        });
       });
 
       updateRisk();
