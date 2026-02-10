@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legendary Forex Bot Studio</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --navy: #0b1b2a;
+        --ink: #0f172a;
+        --slate: #475569;
+        --mist: #e2e8f0;
+        --sky: #38bdf8;
+        --emerald: #10b981;
+        --gold: #facc15;
+        --card: #ffffff;
+        --surface: #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: var(--surface);
+        color: var(--ink);
+        line-height: 1.6;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      header {
+        background: radial-gradient(circle at top left, #1e293b, var(--navy));
+        color: #f8fafc;
+        padding: 2.5rem 6vw 4rem;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .brand-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--sky), var(--emerald));
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .nav ul {
+        list-style: none;
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .nav a {
+        color: #e2e8f0;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .hero {
+        display: grid;
+        gap: 2.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        align-items: center;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 3vw, 3.1rem);
+        line-height: 1.2;
+        margin-bottom: 1.2rem;
+      }
+
+      .hero p {
+        color: #dbeafe;
+        margin-bottom: 1.75rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.9rem 1.4rem;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--gold);
+        color: var(--ink);
+        box-shadow: 0 12px 24px rgba(250, 204, 21, 0.35);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.12);
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      main {
+        padding: 0 6vw 5rem;
+      }
+
+      .section {
+        margin-top: -3rem;
+        background: var(--card);
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      }
+
+      .section + .section {
+        margin-top: 2.5rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: 18px;
+        padding: 1.5rem;
+        border: 1px solid var(--mist);
+      }
+
+      .card h3 {
+        margin-bottom: 0.75rem;
+        font-size: 1.05rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--emerald);
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      .form {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .form label {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .form input,
+      .form textarea,
+      .form select {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 14px;
+        border: 1px solid var(--mist);
+        font-size: 0.95rem;
+        background: #fff;
+      }
+
+      .form textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .form-row {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+
+      .library-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+
+      .library-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 1.5rem;
+        border: 1px solid var(--mist);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.12);
+        color: #0284c7;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        text-align: center;
+        color: var(--slate);
+        font-size: 0.9rem;
+        padding-bottom: 2rem;
+      }
+
+      @media (max-width: 720px) {
+        header {
+          padding: 2rem 6vw 3.5rem;
+        }
+
+        .section {
+          padding: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <nav class="nav">
+          <div class="brand">
+            <div class="brand-badge">FX</div>
+            Legendary Bot Studio
+          </div>
+          <ul>
+            <li><a href="#studio">Bot Studio</a></li>
+            <li><a href="#library">Forex Library</a></li>
+            <li><a href="#insights">Market Insights</a></li>
+            <li><a href="#risk">Risk Desk</a></li>
+          </ul>
+        </nav>
+        <section class="hero">
+          <div>
+            <div class="pill">Trusted by institutional desks</div>
+            <h1>Build banking-grade Forex trading bots in plain English.</h1>
+            <p>
+              Designed by a legendary mentor with 26+ years in banking and FX, this platform helps your
+              clients translate strategy ideas into automated, risk-managed execution plans with real
+              market intelligence baked in.
+            </p>
+            <div class="hero-actions">
+              <button class="btn btn-primary">Generate My Bot</button>
+              <button class="btn btn-secondary">Explore Strategy Library</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Execution Summary</h3>
+            <p>Average execution speed: <strong>32ms</strong></p>
+            <p>Connected liquidity venues: <strong>12 banks</strong></p>
+            <p>Compliance checks per trade: <strong>18</strong></p>
+            <div class="pill" style="margin-top: 1rem;">Live risk monitoring enabled</div>
+          </div>
+        </section>
+      </header>
+
+      <main>
+        <section class="section" id="studio">
+          <div class="pill">Bot Builder</div>
+          <h2>Create your custom trading bot</h2>
+          <p>
+            Describe your strategy in plain English or select a known approach. We will map it to the
+            correct indicators, execution rules, and institutional risk controls.
+          </p>
+          <div class="form" style="margin-top: 1.5rem;">
+            <div>
+              <label for="strategy">Strategy description</label>
+              <textarea
+                id="strategy"
+                placeholder="Example: Trade EUR/USD when the 50 EMA crosses above the 200 EMA, risk 1% per trade, set 2:1 reward-to-risk."
+              ></textarea>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="strategy-name">Or pick a named strategy</label>
+                <select id="strategy-name">
+                  <option>Smart Money Breakout</option>
+                  <option>London Session Momentum</option>
+                  <option>Mean Reversion Scalper</option>
+                  <option>Carry Trade Trend Rider</option>
+                </select>
+              </div>
+              <div>
+                <label for="timeframe">Preferred time frame</label>
+                <select id="timeframe">
+                  <option>1 Minute (M1)</option>
+                  <option>5 Minutes (M5)</option>
+                  <option>15 Minutes (M15)</option>
+                  <option>1 Hour (H1)</option>
+                  <option>4 Hours (H4)</option>
+                  <option>Daily</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="pair">Trading pairs</label>
+                <select id="pair">
+                  <option>EUR/USD</option>
+                  <option>GBP/USD</option>
+                  <option>USD/JPY</option>
+                  <option>XAU/USD (Gold)</option>
+                  <option>USD/CAD</option>
+                </select>
+              </div>
+              <div>
+                <label for="risk">Risk profile</label>
+                <select id="risk">
+                  <option>Conservative (0.5% per trade)</option>
+                  <option>Balanced (1% per trade)</option>
+                  <option>Growth (1.5% per trade)</option>
+                  <option>Institutional (dynamic VAR + drawdown cap)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width: fit-content;">Build My Bot Plan</button>
+          </div>
+        </section>
+
+        <section class="section" id="insights">
+          <div class="pill">Forex Intelligence</div>
+          <h2>Feed your bots with institutional data</h2>
+          <div class="grid" style="margin-top: 1.5rem;">
+            <div class="card">
+              <h3>Macro &amp; News Sentiment</h3>
+              <p>
+                Integrate economic calendars, central bank commentary, and sentiment scoring to avoid
+                surprise volatility.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Liquidity Mapping</h3>
+              <p>
+                Use depth-of-market and liquidity sweep alerts to optimise entries during high-volume
+                sessions.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Execution Engine</h3>
+              <p>
+                Smart order routing, slippage controls, and spread surveillance keep your strategies
+                bank-ready.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Risk Governance</h3>
+              <p>
+                Automated drawdown caps, exposure limits, and compliance rules are woven into every
+                bot you build.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="library">
+          <div class="pill">Strategy Library</div>
+          <h2>Select a ready-made bot from the Forex library</h2>
+          <p>Choose a proven strategy, then customize the risk controls and execution style.</p>
+          <div class="library-grid" style="margin-top: 1.5rem;">
+            <div class="library-card">
+              <span class="tag">High Accuracy</span>
+              <h3>Institutional Trend Capture</h3>
+              <p>Multi-timeframe confirmation, bank order flow zones, and adaptive trailing stops.</p>
+              <button class="btn btn-secondary">Use This Bot</button>
+            </div>
+            <div class="library-card">
+              <span class="tag">Scalping</span>
+              <h3>Precision London Open</h3>
+              <p>Targets liquidity sweeps with strict spread filters and session-based risk controls.</p>
+              <button class="btn btn-secondary">Use This Bot</button>
+            </div>
+            <div class="library-card">
+              <span class="tag">Balanced</span>
+              <h3>Carry + Momentum Hybrid</h3>
+              <p>Pairs macro trend bias with momentum entries and volatility-adjusted stops.</p>
+              <button class="btn btn-secondary">Use This Bot</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="risk">
+          <div class="pill">Risk Management</div>
+          <h2>Institutional-grade risk desk</h2>
+          <div class="grid" style="margin-top: 1.5rem;">
+            <div class="card">
+              <h3>Capital Protection</h3>
+              <p>Hard stop-loss rules, max daily loss thresholds, and equity curve protection.</p>
+            </div>
+            <div class="card">
+              <h3>Position Sizing</h3>
+              <p>Dynamic sizing based on volatility, ATR, and real-time margin requirements.</p>
+            </div>
+            <div class="card">
+              <h3>Compliance Alerts</h3>
+              <p>Pre-trade checks align your bots with banking supervision and audit standards.</p>
+            </div>
+            <div class="card">
+              <h3>Performance Dashboard</h3>
+              <p>Track win rate, drawdown, and trade quality with institutional-grade analytics.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Built for visionary traders seeking consistent, well-governed automation. © 2024 Legendary Forex Bot Studio.
+      </footer>
+    </div>
+  </body>
+</html>
