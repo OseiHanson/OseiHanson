@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forex Elite Preview</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body style="margin:0;background:#04080F;">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+      const GOLD = "#C9A84C";
+      const GREEN = "#00E5A0";
+      const RED = "#FF4560";
+      const BLUE = "#3D85FF";
+      const pairs = [
+        { pair: "XAUUSD", price: 2318.45, change: 0.42, up: true, spread: 0.5, vol: 90, bias: "BUY" },
+        { pair: "EURUSD", price: 1.08412, change: -0.18, up: false, spread: 0.6, vol: 75, bias: "SELL" },
+        { pair: "GBPUSD", price: 1.26534, change: 0.31, up: true, spread: 0.8, vol: 78, bias: "BUY" },
+        { pair: "USDJPY", price: 154.321, change: 0.22, up: true, spread: 0.9, vol: 70, bias: "BUY" },
+        { pair: "GBPJPY", price: 195.241, change: 0.55, up: true, spread: 2.4, vol: 95, bias: "WAIT" },
+        { pair: "AUDUSD", price: 0.65312, change: -0.12, up: false, spread: 0.8, vol: 60, bias: "SELL" },
+        { pair: "USDCAD", price: 1.36812, change: 0.08, up: true, spread: 0.8, vol: 55, bias: "BUY" },
+        { pair: "NZDUSD", price: 0.60124, change: -0.25, up: false, spread: 0.9, vol: 50, bias: "SELL" },
+      ];
+      const SMC_STRATS = [
+        { title: "ORDER BLOCK ENTRY", tag: "OB", desc: "Identify the last opposing candle before an impulsive BOS move. Enter on price return to zone with confirmation.", rules: ["Find impulsive leg that breaks structure", "Mark last opposing candle as OB", "Enter on retracement into OB", "Confirm with rejection wick or engulfing", "SL below/above OB, TP at structural high/low"] },
+        { title: "FAIR VALUE GAP", tag: "FVG", desc: "3-candle imbalance where price moves too fast, leaving a gap between C1 high and C3 low. Price revisits to fill.", rules: ["Identify 3-candle FVG pattern", "Bullish: C1 high gap above C3 low", "Mark FVG zone on chart", "Enter at 50% of FVG on return", "TP at next structure, SL beyond gap"] },
+        { title: "CHANGE OF CHARACTER", tag: "CHoCH", desc: "Trend reversal signal — price breaks above the last LH in downtrend or below last HL in uptrend. Signals SMC direction shift.", rules: ["Identify current trend direction", "CHoCH: break of most recent opposing swing", "Confirm with strong momentum candle", "Enter on retest of CHoCH level", "Multi-TF confirmation for higher probability"] },
+        { title: "LIQUIDITY SWEEP", tag: "LSQ", desc: "Market makers spike price beyond equal highs/lows to collect stop orders, then reverse sharply. Enter after the sweep.", rules: ["Identify equal highs or equal lows", "Wait for price spike beyond the level", "Sweep candle must close back inside", "Look for OB or FVG just beyond level", "Enter reversal after sweep confirmation"] },
+        { title: "BREAKER BLOCK", tag: "BB", desc: "Failed order block that price broke through. Now acts as mitigation zone in the opposite direction. High probability reversal.", rules: ["Identify OB that price broke through", "Former OB becomes breaker block", "Mark the zone of the original OB", "Wait for price to retrace into breaker", "Enter opposite direction on rejection"] },
+        { title: "BOS CONTINUATION", tag: "BOS", desc: "Break of Structure confirms institutional trend continuation. New HH in uptrend, new LL in downtrend. Enter pullbacks after BOS.", rules: ["BOS confirms existing trend direction", "In uptrend: price exceeds previous HH", "Pull back to OB or demand zone", "Wait for confirmation candle at OB", "Ride continuation move to next structure"] },
+      ];
+      const PA_STRATS = [
+        { title: "PIN BAR REVERSAL", tag: "PB", desc: "Long wick rejection candle at key levels. Wick must be ≥2/3 of total range. Body at one extreme. Most reliable at S&R, OB, Fibonacci." },
+        { title: "ENGULFING PATTERN", tag: "ENG", desc: "Second candle completely engulfs first candle's body. Must occur at key level. Larger the engulfing body vs mother bar = stronger signal." },
+        { title: "INSIDE BAR BREAKOUT", tag: "IB", desc: "Inside bar contained within mother bar range. Trade breakout in trend direction. Tight stops inside the pattern make excellent R:R." },
+        { title: "TREND LINE BOUNCE", tag: "TLB", desc: "3rd+ touch of validated trend line. More touches = stronger line. Look for rejection candle at touch. SL just beyond the trend line." },
+      ];
+      const SESSIONS = [
+        { name: "SYDNEY", time: "22:00–07:00", pairs: "AUD NZD JPY", active: true, color: "#00E5A0" },
+        { name: "TOKYO", time: "00:00–09:00", pairs: "JPY AUD NZD", active: true, color: "#3D85FF" },
+        { name: "LONDON", time: "08:00–17:00", pairs: "EUR GBP CHF", active: false, color: "#C9A84C" },
+        { name: "NEW YORK", time: "13:00–22:00", pairs: "USD CAD MXN", active: false, color: "#FF4560" },
+      ];
+      const BROKERS = ["EXNESS", "XM GLOBAL", "IC MARKETS", "FXTM", "PEPPERSTONE", "FBS"];
+      const PAGES = ["HERO", "TICKER", "SIGNALS", "LIBRARY", "RISK CALC", "EA CODE", "BROKER", "PAIRS"];
+
+      function MiniChart({ width = 200, height = 60 }) {
+        const candles = Array.from({ length: 22 }, (_, i) => {
+          const base = 50 + Math.sin(i * 0.5) * 15 + Math.random() * 8;
+          const open = base + (Math.random() - 0.5) * 4;
+          const close = base + (Math.random() - 0.5) * 6;
+          const high = Math.max(open, close) + Math.random() * 4;
+          const low = Math.min(open, close) - Math.random() * 4;
+          return { open, close, high, low };
+        });
+        const allVals = candles.flatMap((c) => [c.high, c.low]);
+        const mn = Math.min(...allVals), mx = Math.max(...allVals);
+        const scale = (v) => height - ((v - mn) / (mx - mn)) * height;
+        const cw = width / candles.length;
+        return (
+          <svg width={width} height={height} style={{ display: "block" }}>
+            {candles.map((c, i) => {
+              const bull = c.close >= c.open;
+              const x = i * cw + cw / 2;
+              const bodyTop = scale(Math.max(c.open, c.close));
+              const bodyBot = scale(Math.min(c.open, c.close));
+              const bodyH = Math.max(1, bodyBot - bodyTop);
+              return (
+                <g key={i}>
+                  <line x1={x} y1={scale(c.high)} x2={x} y2={scale(c.low)} stroke={bull ? GREEN : RED} strokeWidth={0.8} />
+                  <rect x={x - cw * 0.35} y={bodyTop} width={cw * 0.7} height={bodyH} fill={bull ? GREEN : RED} opacity={0.85} />
+                </g>
+              );
+            })}
+          </svg>
+        );
+      }
+
+      function SignalCard({ pair, dir, strategy, entry, sl, tp, rr, strength, delay = 0 }) {
+        const isBuy = dir === "BUY";
+        return (
+          <div style={{ border: "1px solid #141E30", borderLeft: `3px solid ${isBuy ? GREEN : RED}`, borderRadius: 6, padding: "16px 18px", background: "#080E1A", display: "grid", gridTemplateColumns: "44px 1fr auto", gap: 12, alignItems: "center", animation: `slideIn 0.4s ease ${delay}s both` }}>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: isBuy ? "rgba(0,229,160,0.1)" : "rgba(255,69,96,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: isBuy ? GREEN : RED }}>{isBuy ? "▲" : "▼"}</div>
+            <div>
+              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 1 }}>{pair}</div>
+              <div style={{ fontFamily: "monospace", fontSize: 10, color: GOLD, letterSpacing: 1 }}>{strategy}</div>
+              <div style={{ fontFamily: "monospace", fontSize: 10, color: "#445577", marginTop: 2 }}>R:R 1:{rr} | {strength}/5 ★</div>
+            </div>
+            <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: 11 }}>
+              {[["ENTRY", "#3D85FF", entry], ["SL", RED, sl], ["TP", GREEN, tp]].map(([lbl, clr, val]) => (
+                <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end", marginBottom: 2 }}>
+                  <span style={{ fontSize: 9, background: `${clr}22`, color: clr, padding: "1px 5px", borderRadius: 2 }}>{lbl}</span>
+                  <span style={{ color: "#8899BB" }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function Gauge({ value, label, color }) {
+        const r = 38, circ = 2 * Math.PI * r, offset = circ * (1 - value / 100);
+        return (
+          <div style={{ textAlign: "center" }}>
+            <svg width={90} height={90} viewBox="0 0 90 90">
+              <circle cx={45} cy={45} r={r} fill="none" stroke="#141E30" strokeWidth={7} />
+              <circle cx={45} cy={45} r={r} fill="none" stroke={color} strokeWidth={7} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" transform="rotate(-90 45 45)" style={{ transition: "stroke-dashoffset 1s ease" }} />
+              <text x={45} y={49} textAnchor="middle" fill={color} style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18 }}>{value}</text>
+            </svg>
+            <div style={{ fontFamily: "monospace", fontSize: 9, color: "#445577", letterSpacing: 1.5, textTransform: "uppercase" }}>{label}</div>
+          </div>
+        );
+      }
+
+      function ForexElitePreview() {
+        const [page, setPage] = useState(0);
+        const [tick, setTick] = useState(0);
+        const [prices, setPrices] = useState(pairs.map((p) => p.price));
+        const [sigGenerated, setSigGenerated] = useState(false);
+        const [sigLoading, setSigLoading] = useState(false);
+        const [selectedPair, setSelectedPair] = useState("XAUUSD");
+        const [selectedTF, setSelectedTF] = useState("H1");
+        const [selectedStrat, setSelectedStrat] = useState("SMC");
+        const [balance, setBalance] = useState(10000);
+        const [riskPct, setRiskPct] = useState(1);
+        const [slPips, setSlPips] = useState(30);
+        const [lotResult, setLotResult] = useState(null);
+        const [connectedBroker, setConnectedBroker] = useState(null);
+        const [libTab, setLibTab] = useState("SMC");
+        const [expandedStrat, setExpandedStrat] = useState(null);
+        const [eaStrategy, setEaStrategy] = useState("SMC Order Block + CHoCH");
+        const [eaPair, setEaPair] = useState("XAUUSD");
+        const [eaRisk, setEaRisk] = useState(1);
+        const [toast, setToast] = useState(null);
+
+        useEffect(() => {
+          const id = setInterval(() => {
+            setPrices((prev) => prev.map((p, i) => {
+              const delta = (Math.random() - 0.5) * (i === 0 ? 0.5 : 0.0003);
+              return parseFloat((p + delta).toFixed(i === 0 ? 2 : i === 3 ? 3 : 5));
+            }));
+            setTick((t) => t + 1);
+          }, 1800);
+          return () => clearInterval(id);
+        }, []);
+
+        const showToast = (msg) => {
+          setToast(msg);
+          setTimeout(() => setToast(null), 3000);
+        };
+
+        const handleGenerate = () => {
+          setSigLoading(true);
+          setSigGenerated(false);
+          setTimeout(() => {
+            setSigLoading(false);
+            setSigGenerated(true);
+          }, 1400);
+        };
+
+        const calcLot = () => {
+          const r = ((balance * riskPct / 100) / (slPips * 10)).toFixed(2);
+          setLotResult(r);
+          showToast(`Lot size: ${r} lots`);
+        };
+
+        const SIGNALS = [
+          { pair: "XAUUSD", dir: "BUY", strategy: "SMC ORDER BLOCK", entry: "2312.50", sl: "2298.00", tp: "2341.00", rr: 2, strength: 5 },
+          { pair: "GBPUSD", dir: "BUY", strategy: "S&R BOUNCE", entry: "1.26480", sl: "1.26100", tp: "1.27240", rr: 2, strength: 4 },
+          { pair: "EURUSD", dir: "SELL", strategy: "FVG ENTRY", entry: "1.08450", sl: "1.08720", tp: "1.07910", rr: 2, strength: 3 },
+        ];
+
+        const EA_CODE = `// ForexElite Pro — ${eaStrategy} EA\n// Pair: ${eaPair} | Risk: ${eaRisk}% per trade\n// Generated: ForexElite Pro Platform\n#property strict\ninput double RiskPercent = ${eaRisk};\ninput int OB_Lookback = 20;\ninput double MinRR = 2.0;\ninput int MagicNumber = 202501;\ninput bool UseTrailing = true;\ndouble g_OB_High, g_OB_Low;\nbool g_CHoCH_Bull, g_CHoCH_Bear;\nint OnInit() {\n Print("ForexElite EA on ", _Symbol);\n return(INIT_SUCCEEDED);\n}\nvoid OnTick() {\n if(!IsNewBar()) return;\n ScanOrderBlocks();\n DetectCHoCH();\n CheckEntry();\n if(UseTrailing) TrailStop();\n}\nvoid ScanOrderBlocks() {\n for(int i=1; i<OB_Lookback; i++) {\n bool impulse = iClose(_Symbol,0,i-1) >\n iOpen(_Symbol,0,i-1)*1.002;\n bool prevBear = iClose(_Symbol,0,i) <\n iOpen(_Symbol,0,i);\n if(impulse && prevBear) {\n g_OB_High = iHigh(_Symbol,0,i);\n g_OB_Low = iLow(_Symbol,0,i);\n break;\n }\n }\n}\ndouble CalcLots(double slDist) {\n double bal = AccountInfoDouble(ACCOUNT_BALANCE);\n double risk = bal * RiskPercent / 100.0;\n double pv = SymbolInfoDouble(_Symbol,\n SYMBOL_TRADE_TICK_VALUE);\n double pips = slDist / _Point / 10;\n return NormalizeDouble(risk/(pips*pv),2);\n}`;
+
+        const NavBar = () => (
+          <div style={{ background: "rgba(4,8,15,0.97)", borderBottom: "1px solid #141E30", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 }}>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: GOLD }}>FOREX<span style={{ color: "#EEF2FF" }}>ELITE</span> PRO</div>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              {PAGES.map((p, i) => (
+                <button key={p} onClick={() => setPage(i)} style={{ background: page === i ? GOLD : "transparent", color: page === i ? "#04080F" : "#445577", border: "1px solid " + (page === i ? GOLD : "#141E30"), borderRadius: 3, padding: "3px 8px", fontFamily: "monospace", fontSize: 9, letterSpacing: 1, cursor: "pointer", transition: "all 0.15s" }}>{p}</button>
+              ))}
+            </div>
+          </div>
+        );
+
+        const HeroPage = () => (
+          <div style={{ background: "#04080F", minHeight: 520, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 32px" }}>
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px)`, backgroundSize: "48px 48px" }} />
+            <div style={{ position: "absolute", width: 400, height: 400, background: "radial-gradient(circle,rgba(201,168,76,0.12) 0%,transparent 70%)", top: -80, right: -80, borderRadius: "50%" }} />
+            <div style={{ position: "absolute", width: 300, height: 300, background: "radial-gradient(circle,rgba(61,133,255,0.07) 0%,transparent 70%)", bottom: 0, left: 60, borderRadius: "50%" }} />
+            <div style={{ position: "relative" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "monospace", fontSize: 10, letterSpacing: 3, color: GOLD, border: "1px solid #7A6130", borderRadius: 2, padding: "5px 12px", marginBottom: 20 }}><div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, animation: "pulse 2s infinite" }} />INSTITUTIONAL TRADING INTELLIGENCE</div>
+              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 72, lineHeight: 0.88, letterSpacing: 2, marginBottom: 18 }}>TRADE LIKE<br /><span style={{ color: GOLD }}>SMART</span><br />MONEY</div>
+              <div style={{ fontSize: 14, color: "#8899BB", maxWidth: 480, lineHeight: 1.7, marginBottom: 32, fontWeight: 300 }}>Complete forex ecosystem — SMC signals, rule-based strategies, precision risk management, MT5 EA generation, and multi-broker connectivity. Built on 26 years of institutional expertise.</div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button onClick={() => setPage(2)} style={{ background: GOLD, color: "#04080F", border: "none", padding: "12px 28px", fontWeight: 700, fontSize: 12, letterSpacing: 2, borderRadius: 4, cursor: "pointer" }}>GENERATE SIGNALS</button>
+                <button onClick={() => setPage(3)} style={{ background: "transparent", color: "#EEF2FF", border: "1px solid #141E30", padding: "12px 28px", fontSize: 12, letterSpacing: 2, borderRadius: 4, cursor: "pointer" }}>STRATEGY LIBRARY</button>
+              </div>
+              <div style={{ position: "absolute", right: 0, top: -20, opacity: 0.5 }}><MiniChart width={240} height={100} /></div>
+            </div>
+          </div>
+        );
+
+        const TickerPage = () => (
+          <div style={{ background: "#04080F", padding: 24 }}><div style={{ fontFamily: "monospace", fontSize: 10, color: GOLD, letterSpacing: 3, marginBottom: 16 }}>// LIVE MARKET TICKER</div></div>
+        );
+        const SignalPage = () => (<div style={{ background: "#04080F", padding: 24 }}><div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40 }}>SIGNAL GENERATOR</div></div>);
+        const LibraryPage = () => (
+          <div style={{ background: "#04080F", padding: 24 }}>
+            <div style={{ fontFamily: "monospace", fontSize: 10, color: GOLD, letterSpacing: 3, marginBottom: 8 }}>// KNOWLEDGE BASE</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40, letterSpacing: 1, marginBottom: 20 }}>STRATEGY LIBRARY</div>
+            <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #141E30", marginBottom: 20, overflowX: "auto" }}>
+              {["SMC", "Price Action"].map((t) => (
+                <button key={t} onClick={() => { setLibTab(t); setExpandedStrat(null); }} style={{ padding: "8px 16px", fontSize: 11, letterSpacing: 1, color: libTab === t ? GOLD : "#445577", border: "none", borderBottom: libTab === t ? `2px solid ${GOLD}` : "2px solid transparent", background: "none", cursor: "pointer" }}>{t}</button>
+              ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
+              {(libTab === "SMC" ? SMC_STRATS : PA_STRATS).map((s, i) => (
+                <div key={i} onClick={() => setExpandedStrat(expandedStrat === i ? null : i)} style={{ background: "#080E1A", border: `1px solid ${expandedStrat === i ? GOLD : "#141E30"}`, borderLeft: `3px solid ${expandedStrat === i ? GOLD : "#1A2840"}`, borderRadius: 6, padding: 18, cursor: "pointer" }}>
+                  <div style={{ display: "inline-block", padding: "2px 8px", fontSize: 9, fontFamily: "monospace", letterSpacing: 2, background: "rgba(201,168,76,0.1)", color: GOLD, borderRadius: 2, marginBottom: 10 }}>{s.tag}</div>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1, marginBottom: 8 }}>{s.title}</div>
+                  <div style={{ fontSize: 12, color: "#8899BB", lineHeight: 1.6 }}>{s.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+        const RiskPage = () => (<div style={{ background: "#04080F", padding: 24 }}><button onClick={calcLot}>CALCULATE</button>{lotResult && <div>{lotResult}</div>}<Gauge value={riskPct * 10} label="Risk/Trade" color={GREEN} /></div>);
+        const EAPage = () => (
+          <div style={{ background: "#04080F", padding: 24 }}>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40, letterSpacing: 1, marginBottom: 20 }}>EA CODE GENERATOR</div>
+            <pre style={{ color: "#8899BB", whiteSpace: "pre-wrap" }}>{EA_CODE}</pre>
+          </div>
+        );
+        const BrokerPage = () => (<div style={{ background: "#04080F", padding: 24 }}>{BROKERS.map((b) => <button key={b} onClick={() => { setConnectedBroker(b); showToast(`${b} selected`); }}>{b}</button>)}</div>);
+        const PairsPage = () => (<div style={{ background: "#04080F", padding: 24 }}>{SESSIONS.map((s) => <div key={s.name}>{s.name}</div>)}</div>);
+
+        const PAGES_RENDER = [HeroPage, TickerPage, SignalPage, LibraryPage, RiskPage, EAPage, BrokerPage, PairsPage];
+        const CurrentPage = PAGES_RENDER[page];
+
+        return (
+          <div style={{ background: "#04080F", color: "#EEF2FF", minHeight: "100vh", fontFamily: "'DM Sans',sans-serif" }}>
+            <style>{`
+              @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
+              @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+              @keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+              * { box-sizing: border-box; }
+              button { cursor: pointer; }
+            `}</style>
+            <NavBar />
+            <div style={{ maxWidth: 1200, margin: "0 auto" }}><CurrentPage /></div>
+            {toast && <div style={{ position: "fixed", bottom: 60, right: 24, background: "#0C1424", border: "1px solid #141E30", borderLeft: `3px solid ${GREEN}`, borderRadius: 6, padding: "12px 18px", fontFamily: "monospace", fontSize: 12 }}>{toast}</div>}
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<ForexElitePreview />);
+    </script>
+  </body>
+</html>
